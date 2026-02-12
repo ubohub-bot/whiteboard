@@ -7,6 +7,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TextEditDialog } from "@/components/text-edit-dialog";
 import {
   Pencil,
   Square,
@@ -43,6 +44,8 @@ export function WhiteboardCanvas({ userId, username, userColor }: WhiteboardCanv
   const [stageScale, setStageScale] = useState(1);
   const stageRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 1920, height: 1080 });
+  const [editingElement, setEditingElement] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Convex
   const elements = useQuery(api.elements.list) || [];
@@ -58,20 +61,25 @@ export function WhiteboardCanvas({ userId, username, userColor }: WhiteboardCanv
   // Update dimensions on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight - 64,
-      });
-
-      const handleResize = () => {
+      const updateDimensions = () => {
+        // Use visualViewport for better mobile support
+        const vw = window.visualViewport?.width || window.innerWidth;
+        const vh = window.visualViewport?.height || window.innerHeight;
         setDimensions({
-          width: window.innerWidth,
-          height: window.innerHeight - 64,
+          width: vw,
+          height: vh - 56, // Account for toolbar (smaller on mobile)
         });
       };
 
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
+      updateDimensions();
+
+      window.addEventListener("resize", updateDimensions);
+      window.visualViewport?.addEventListener("resize", updateDimensions);
+      
+      return () => {
+        window.removeEventListener("resize", updateDimensions);
+        window.visualViewport?.removeEventListener("resize", updateDimensions);
+      };
     }
   }, []);
 
@@ -179,51 +187,22 @@ export function WhiteboardCanvas({ userId, username, userColor }: WhiteboardCanv
   // Handle text edit
   const handleTextDblClick = useCallback(
     (element: any) => {
-      const stage = stageRef.current;
-      if (!stage) return;
-
-      const textPosition = element;
-      const stageBox = stage.container().getBoundingClientRect();
-
-      const areaPosition = {
-        x: stageBox.left + textPosition.x * stageScale + stagePos.x,
-        y: stageBox.top + textPosition.y * stageScale + stagePos.y,
-      };
-
-      const textarea = document.createElement("textarea");
-      document.body.appendChild(textarea);
-
-      textarea.value = element.text || "";
-      textarea.style.position = "absolute";
-      textarea.style.top = areaPosition.y + "px";
-      textarea.style.left = areaPosition.x + "px";
-      textarea.style.width = (element.width || 200) + "px";
-      textarea.style.fontSize = (element.fontSize || 16) + "px";
-      textarea.style.border = "2px solid #3b82f6";
-      textarea.style.padding = "4px";
-      textarea.style.borderRadius = "4px";
-      textarea.style.outline = "none";
-      textarea.style.resize = "none";
-      textarea.style.background = element.type === "sticky" ? "#fef08a" : "#fff";
-
-      textarea.focus();
-
-      const removeTextarea = () => {
-        updateElement({
-          id: element._id,
-          text: textarea.value,
-        });
-        textarea.parentNode?.removeChild(textarea);
-      };
-
-      textarea.addEventListener("blur", removeTextarea);
-      textarea.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          removeTextarea();
-        }
-      });
+      setEditingElement(element);
+      setEditDialogOpen(true);
     },
-    [stageScale, stagePos, updateElement]
+    []
+  );
+
+  const handleTextSave = useCallback(
+    (text: string) => {
+      if (editingElement) {
+        updateElement({
+          id: editingElement._id,
+          text,
+        });
+      }
+    },
+    [editingElement, updateElement]
   );
 
   const tools = [
@@ -239,15 +218,15 @@ export function WhiteboardCanvas({ userId, username, userColor }: WhiteboardCanv
   return (
     <div className="h-screen flex flex-col bg-neutral-100">
       {/* Toolbar */}
-      <div className="bg-white border-b border-neutral-200 p-3 flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <h1 className="font-semibold text-lg">✏️ Whiteboard</h1>
-          <Badge style={{ backgroundColor: userColor, color: "#fff" }}>
+      <div className="bg-white border-b border-neutral-200 p-2 sm:p-3 flex items-center gap-2 sm:gap-4 overflow-x-auto">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <h1 className="font-semibold text-sm sm:text-lg">✏️</h1>
+          <Badge style={{ backgroundColor: userColor, color: "#fff" }} className="text-xs">
             {username}
           </Badge>
         </div>
 
-        <div className="flex gap-1 ml-auto">
+        <div className="flex gap-1 flex-shrink-0">
           {tools.map((t) => (
             <Button
               key={t.id}
@@ -255,16 +234,17 @@ export function WhiteboardCanvas({ userId, username, userColor }: WhiteboardCanv
               size="sm"
               onClick={() => setTool(t.id as Tool)}
               title={t.label}
+              className="h-8 w-8 p-0"
             >
-              <t.icon className="h-4 w-4" />
+              <t.icon className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-neutral-600" />
-          <span className="text-sm text-neutral-600">
-            {activeUsers.length} online
+        <div className="flex items-center gap-1 ml-auto flex-shrink-0">
+          <Users className="h-3 w-3 sm:h-4 sm:w-4 text-neutral-600" />
+          <span className="text-xs sm:text-sm text-neutral-600">
+            {activeUsers.length}
           </span>
         </div>
       </div>
@@ -278,6 +258,9 @@ export function WhiteboardCanvas({ userId, username, userColor }: WhiteboardCanv
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onTouchStart={handleMouseDown}
+          onTouchMove={handleMouseMove}
+          onTouchEnd={handleMouseUp}
           draggable={tool === "select"}
           onDragEnd={(e) => {
             setStagePos({ x: e.target.x(), y: e.target.y() });
@@ -401,13 +384,20 @@ export function WhiteboardCanvas({ userId, username, userColor }: WhiteboardCanv
           </Layer>
         </Stage>
 
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-2 text-xs text-neutral-600 space-y-1">
+        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-2 text-xs text-neutral-600 space-y-1 hidden sm:block">
           <div><strong>Pan:</strong> Drag in Select mode</div>
-          <div><strong>Move elements:</strong> Select mode + drag</div>
-          <div><strong>Edit text:</strong> Double-click</div>
+          <div><strong>Move:</strong> Select + drag element</div>
+          <div><strong>Edit:</strong> Double-tap/click text</div>
           <div className="pt-1 border-t">Current: <strong>{tool}</strong></div>
         </div>
       </div>
+
+      <TextEditDialog
+        open={editDialogOpen}
+        initialText={editingElement?.text || ""}
+        onSave={handleTextSave}
+        onClose={() => setEditDialogOpen(false)}
+      />
     </div>
   );
 }
