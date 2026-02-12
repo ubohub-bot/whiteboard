@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { LoginScreen } from "@/components/login-screen";
-import { Whiteboard } from "@/components/whiteboard";
+import { WhiteboardCanvas } from "@/components/whiteboard-canvas";
 
 export default function Home() {
   const [userId, setUserId] = useState<Id<"users"> | null>(null);
@@ -44,7 +44,7 @@ export default function Home() {
   }
 
   return (
-    <Whiteboard
+    <WhiteboardCanvas
       userId={userId}
       username={username}
       userColor={user.color}
