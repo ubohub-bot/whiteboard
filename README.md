@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ✏️ Whiteboard
 
-## Getting Started
+A real-time collaborative whiteboard where multiple users can draw, create shapes, add sticky notes, and see each other's cursors live.
 
-First, run the development server:
+## Features
+
+- 🎨 **Freehand Drawing** - Smooth pen drawing
+- 🔷 **Shapes** - Rectangles, circles, and lines
+- 📝 **Sticky Notes** - Add yellow post-it style notes
+- ✍️ **Text** - Place text anywhere on the canvas
+- 🖱️ **Real-time Cursors** - See where everyone is pointing
+- ♾️ **Infinite Canvas** - Pan with Shift+Drag or middle mouse
+- 🌈 **Auto Colors** - Each user gets a random color
+- 👥 **Collaborative** - Changes sync instantly across all users
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **UI**: shadcn/ui + Tailwind CSS
+- **Backend**: Convex (real-time database)
+- **Canvas**: HTML5 Canvas API
+- **Deployment**: Vercel
+
+## Live Demo
+
+🌐 **https://whiteboard-eta-inky.vercel.app**
+
+## How to Use
+
+1. **Enter a username** - Just pick any name, no password needed
+2. **Choose a tool** from the toolbar:
+   - Select (move/select elements)
+   - Draw (freehand drawing)
+   - Rectangle
+   - Circle
+   - Line
+   - Sticky Note
+   - Text
+3. **Pan around** - Hold Shift and drag, or use middle mouse button
+4. **Collaborate** - Share the URL with others and draw together!
+
+## Local Development
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/ubohub-bot/whiteboard.git
+cd whiteboard
+npm install
+```
+
+### 2. Set up Convex
+
+```bash
+npx convex dev
+```
+
+This creates a Convex project and adds environment variables to `.env.local`.
+
+### 3. Run dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Convex Dashboard
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+View your database and real-time updates:
+🔗 https://dashboard.convex.dev/d/adept-kangaroo-901
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
+Configured for Vercel. Environment variables needed:
+- `NEXT_PUBLIC_CONVEX_URL`
+- `CONVEX_DEPLOYMENT`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Push to GitHub and connect to Vercel, or use the Vercel CLI:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+vercel --prod
+```
 
-## Deploy on Vercel
+## Keyboard Shortcuts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Shift + Drag**: Pan around the canvas
+- **Middle Mouse**: Pan around the canvas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Future Ideas
+
+- Drag to move elements
+- Layers / z-index control
+- Undo/redo
+- Export to image
+- Zoom in/out
+- More colors and brush sizes
+- Eraser tool
+- Selection and multi-select
+- Permissions (view-only vs edit)
+
+---
+
+**Project created**: 2026-02-12  
+**Status**: Active  
+**Live**: https://whiteboard-eta-inky.vercel.app
